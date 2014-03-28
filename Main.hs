@@ -6,6 +6,7 @@ import Shelly (shelly, verbosely, mkdir_p, cp_r, rm_rf, cp)
 import qualified Data.Text.Lazy as LT
 import Database.HDBC
 import Database.HDBC.Sqlite3
+import System.Directory (getDirectoryContents)
 
 default (LT.Text)
 
@@ -21,21 +22,23 @@ initDocset = shelly $ verbosely $ do
   -- Create the Info.plist File
   cp "Info.plist" "Phaser.docset/Contents/"
 
-main :: IO ()
-main = do
-  initDocset
-
+initDatabase :: (Connection -> IO ()) -> IO ()
+initDatabase populate = do
   -- Create the SQLite index
   conn <- connectSqlite3 "Phaser.docset/Contents/Resources/docSet.dsidx"
   handleSql (\_ -> return 0) $ run conn "DROP TABLE searchIndex;" []
   run conn "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);" []
   run conn "CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);" []
 
-  -- Populate the SQLite index
-  -- INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('name', 'type', 'path');
-  -- Phaser Namespace
-  -- Phaser Classes
-  -- Each class will have constructors, attributes, and methods
+  populate conn
 
   commit conn
   disconnect conn
+
+populateDatabase :: Connection -> IO ()
+populateDatabase conn = putStrLn "Hello, world!"
+
+main :: IO ()
+main = do
+  initDocset
+  initDatabase populateDatabase
