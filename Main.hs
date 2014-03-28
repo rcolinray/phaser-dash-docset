@@ -7,7 +7,7 @@ import qualified Data.Text.Lazy as LT
 import Database.HDBC
 import Database.HDBC.Sqlite3
 import System.Directory (getDirectoryContents)
-import System.FilePath (takeExtensions)
+import System.FilePath (dropExtension, takeExtensions)
 
 default (LT.Text)
 
@@ -22,7 +22,12 @@ initDocset = shelly $ verbosely $ do
 
   -- Create the Info.plist File
   cp "Info.plist" "Phaser.docset/Contents/"
-  cp "Nodes.xml" "Phaser.docset/Contents/Resources/"
+
+addDBEntry :: Connection -> String -> String -> IO Integer
+addDBEntry conn token file = 
+  let name = dropExtension file
+  in do
+    run conn ("INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('" ++ name ++ "', '" ++ token ++ "', '" ++ file ++ "');") []
 
 initDatabase :: (Connection -> IO ()) -> IO ()
 initDatabase populate = do
@@ -58,8 +63,8 @@ populateDatabase :: Connection -> IO ()
 populateDatabase conn = do
   contents <- getDirectoryContents "phaser/docs"
   let docFiles = filter isDocFile contents
-  run conn "INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('Phaser', 'Namespace', 'Phaser.html');" []
-  mapM_ putStrLn docFiles
+  addDBEntry conn "Namespace" "Phaser.html"
+  mapM_ (addDBEntry conn "Class") docFiles
 
 main :: IO ()
 main = do
