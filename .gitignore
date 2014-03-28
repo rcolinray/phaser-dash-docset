@@ -6,4 +6,3 @@ cabal-dev
 *.chs.h
 .virthualenv
 .cabal-sandbox
-Phaser.docset
