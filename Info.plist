@@ -9,7 +9,7 @@
   <key>DocSetPlatformFamily</key>
   <string>phaser</string>
   <key>dashIndexFilePath</key>
-  <string>docs/index.html</string>
+  <string>index.html</string>
   <key>isJavaScriptEnabled</key>
   <true/>
  </dict>
