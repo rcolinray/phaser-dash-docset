@@ -24,10 +24,9 @@ initDocset = shelly $ verbosely $ do
   cp "Info.plist" "Phaser.docset/Contents/"
 
 addDBEntry :: Connection -> String -> String -> IO Integer
-addDBEntry conn token file = 
+addDBEntry conn file token = 
   let name = dropExtension file
-  in do
-    run conn ("INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('" ++ name ++ "', '" ++ token ++ "', '" ++ file ++ "');") []
+  in run conn ("INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('" ++ name ++ "', '" ++ token ++ "', '" ++ file ++ "');") []
 
 initDatabase :: (Connection -> IO ()) -> IO ()
 initDatabase populate = do
@@ -40,18 +39,18 @@ initDatabase populate = do
   commit conn
   disconnect conn
 
-isDocFile :: FilePath -> Bool
-isDocFile "." = False
-isDocFile ".." = False
-isDocFile "build" = False
-isDocFile "img" = False
-isDocFile "scripts" = False
-isDocFile "styles" = False
-isDocFile "index.html" = False
-isDocFile "classes.list.html" = False
-isDocFile "namespaces.list.html" = False
-isDocFile "Phaser.html" = False
-isDocFile file
+isClassFile :: FilePath -> Bool
+isClassFile "." = False
+isClassFile ".." = False
+isClassFile "build" = False
+isClassFile "img" = False
+isClassFile "scripts" = False
+isClassFile "styles" = False
+isClassFile "index.html" = False
+isClassFile "classes.list.html" = False
+isClassFile "namespaces.list.html" = False
+isClassFile "Phaser.html" = False
+isClassFile file
   | ext == ".js.html" = False
   | ext == ".js_.html" = False
   | ext == ".js__.html" = False
@@ -59,12 +58,24 @@ isDocFile file
   | otherwise = True
   where ext = takeExtensions file
 
+populateNamespaces :: Connection -> IO Integer
+populateNamespaces conn = do
+  addDBEntry conn "Namespace" "Phaser.html"
+
+populateClass :: Connection -> FilePath -> IO Integer
+populateClass conn file = do
+  addDBEntry conn file "Class"
+
+populateClasses :: Connection -> IO ()
+populateClasses conn = do
+  contents <- getDirectoryContents "phaser/docs"
+  let docFiles = filter isClassFile contents
+  mapM_ (populateClass conn) docFiles
+
 populateDatabase :: Connection -> IO ()
 populateDatabase conn = do
-  contents <- getDirectoryContents "phaser/docs"
-  let docFiles = filter isDocFile contents
-  addDBEntry conn "Namespace" "Phaser.html"
-  mapM_ (addDBEntry conn "Class") docFiles
+  populateNamespaces conn
+  populateClasses conn
 
 main :: IO ()
 main = do
