@@ -10,6 +10,8 @@ import System.Directory (getDirectoryContents)
 import System.FilePath (dropExtension, takeExtensions)
 import Text.HTML.TagSoup
 
+import Control.Monad.IO.Class
+
 default (LT.Text)
 
 initDocset :: IO ()
@@ -17,6 +19,9 @@ initDocset = shelly $ do
   -- Create the Docset Folder
   echo "Creating Docset directory structure"
   mkdir_p "Phaser.docset/Contents/Resources/"
+
+  echo "Creating Docset icon"
+  cp "icon.png" "Phaser.docset/"
 
   -- Copy existing HTML Documentation
   exists <- test_d "Phaser.docset/Contents/Resources/Documents" 
@@ -33,7 +38,7 @@ initDocset = shelly $ do
   echo "Creating Info.plist"
   cp "Info.plist" "Phaser.docset/Contents/"
 
-  echo "Docset initialized"
+  echo "Docset directory initialized"
 
 addDBEntry conn name token url = run conn ("INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('" ++ name ++ "', '" ++ token ++ "', '" ++ url ++ "');") []
 
@@ -60,14 +65,24 @@ addMethodEntry conn file member =
         url = file ++ "#" ++ member
 
 initDatabase :: (Connection -> IO ()) -> IO ()
-initDatabase populate = do
+initDatabase populate = shelly $ do
   -- Create the SQLite index
-  conn <- connectSqlite3 "Phaser.docset/Contents/Resources/docSet.dsidx"
-  handleSql (\_ -> return 0) $ run conn "DROP TABLE searchIndex;" []
-  run conn "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);" []
-  populate conn
-  commit conn
-  disconnect conn
+  echo "Creating database"
+  
+  conn <- liftIO $ connectSqlite3 "Phaser.docset/Contents/Resources/docSet.dsidx"
+
+  liftIO $ do
+    handleSql (\_ -> return 0) $ run conn "DROP TABLE searchIndex;" []
+    run conn "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);" []
+  
+  echo "Populating Docset database"
+  
+  liftIO $ do
+    populate conn
+    commit conn
+    disconnect conn
+
+  echo "Docset database initialized"
 
 isClassFile :: FilePath -> Bool
 isClassFile "." = False
