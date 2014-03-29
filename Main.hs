@@ -99,10 +99,6 @@ isDocTag tag = tag ~== TagOpen "h4" [("class", "name")]
 members tags = map (fromAttrib "id") $ filter isDocTag $ takeWhile (not . isMethodsHeader) $ dropWhile (not . isMembersHeader) tags
 methods tags = map (fromAttrib "id") $ filter isDocTag $ dropWhile (not . isMethodsHeader) tags
 
---populateMember :: Connection -> FilePath -> String -> IO ()
---populateMember conn file member = do
---  addDBEntry conn "Property"
-
 populateClass :: Connection -> FilePath -> IO ()
 populateClass conn file = do
   addClassEntry conn file
