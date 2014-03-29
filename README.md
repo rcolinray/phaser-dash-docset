@@ -20,17 +20,6 @@ cabal build
 cabal run
 ```
 
-### Current Features
+### Features
 
-The current release can index the following:
-
-- Namespaces
-- Classes
-
-### Future Releases
-
-Future releases will be able to index the following:
-
-- Constructors
-- Properties
-- Methods
+The current release can index all classes, properties, and methods in the Phaser namespace.
