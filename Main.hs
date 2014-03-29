@@ -2,31 +2,62 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
-import Shelly (shelly, verbosely, mkdir_p, cp_r, rm_rf, cp)
+import Shelly (shelly, verbosely, mkdir_p, cp_r, rm_rf, cp, test_d, echo)
 import qualified Data.Text.Lazy as LT
 import Database.HDBC
 import Database.HDBC.Sqlite3
 import System.Directory (getDirectoryContents)
 import System.FilePath (dropExtension, takeExtensions)
+import Text.HTML.TagSoup
 
 default (LT.Text)
 
 initDocset :: IO ()
-initDocset = shelly $ verbosely $ do
+initDocset = shelly $ do
   -- Create the Docset Folder
+  echo "Creating Docset directory structure"
   mkdir_p "Phaser.docset/Contents/Resources/"
 
   -- Copy existing HTML Documentation
-  cp_r "phaser/docs" "Phaser.docset/Contents/Resources/Documents"
+  exists <- test_d "Phaser.docset/Contents/Resources/Documents" 
+  if not exists
+    then do
+      echo "Creating Docset documents"
+      cp_r "phaser/docs" "Phaser.docset/Contents/Resources/Documents"
+    else echo "Docset documents already exist; ignoring"
+
+  echo "Cleaning up unnecessary files"
   rm_rf "Phaser.docset/Contents/Resources/Documents/build"
 
   -- Create the Info.plist File
+  echo "Creating Info.plist"
   cp "Info.plist" "Phaser.docset/Contents/"
 
-addDBEntry :: Connection -> String -> String -> IO Integer
-addDBEntry conn file token = 
-  let name = dropExtension file
-  in run conn ("INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('" ++ name ++ "', '" ++ token ++ "', '" ++ file ++ "');") []
+  echo "Docset initialized"
+
+addDBEntry conn name token url = run conn ("INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('" ++ name ++ "', '" ++ token ++ "', '" ++ url ++ "');") []
+
+addNamespaceEntry :: Connection -> FilePath -> IO Integer
+addNamespaceEntry conn file = 
+  addDBEntry conn name "Namespace" file
+  where name = dropExtension file
+
+addClassEntry :: Connection -> FilePath -> IO Integer
+addClassEntry conn file = 
+  addDBEntry conn name "Class" file
+  where name = dropExtension file
+
+addMemberEntry :: Connection -> FilePath -> String -> IO Integer
+addMemberEntry conn file member =
+  addDBEntry conn name "Property" url
+  where name = (dropExtension file) ++ "." ++ member
+        url = file ++ "#" ++ member
+
+addMethodEntry :: Connection -> FilePath -> String -> IO Integer
+addMethodEntry conn file member =
+  addDBEntry conn name "Method" url
+  where name = (dropExtension file) ++ "." ++ member
+        url = file ++ "#" ++ member
 
 initDatabase :: (Connection -> IO ()) -> IO ()
 initDatabase populate = do
@@ -34,7 +65,6 @@ initDatabase populate = do
   conn <- connectSqlite3 "Phaser.docset/Contents/Resources/docSet.dsidx"
   handleSql (\_ -> return 0) $ run conn "DROP TABLE searchIndex;" []
   run conn "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);" []
-  --run conn "CREATE UNIQUE INDEX anchor ON searchIndex (name, type, path);" []
   populate conn
   commit conn
   disconnect conn
@@ -60,11 +90,28 @@ isClassFile file
 
 populateNamespaces :: Connection -> IO Integer
 populateNamespaces conn = do
-  addDBEntry conn "Namespace" "Phaser.html"
+  addNamespaceEntry conn "Phaser.html"
 
-populateClass :: Connection -> FilePath -> IO Integer
+isMembersHeader tag = tag ~== TagText "Members"
+isMethodsHeader tag = tag ~== TagText "Methods"
+isDocTag tag = tag ~== TagOpen "h4" [("class", "name")]
+
+members tags = map (fromAttrib "id") $ filter isDocTag $ takeWhile (not . isMethodsHeader) $ dropWhile (not . isMembersHeader) tags
+methods tags = map (fromAttrib "id") $ filter isDocTag $ dropWhile (not . isMethodsHeader) tags
+
+--populateMember :: Connection -> FilePath -> String -> IO ()
+--populateMember conn file member = do
+--  addDBEntry conn "Property"
+
+populateClass :: Connection -> FilePath -> IO ()
 populateClass conn file = do
-  addDBEntry conn file "Class"
+  addClassEntry conn file
+  src <- readFile $ "phaser/docs/" ++ file
+  let tags = parseTags src
+  let memberNames = members tags
+  mapM_ (addMemberEntry conn file) memberNames
+  let methodNames = methods tags
+  mapM_ (addMethodEntry conn file) methodNames
 
 populateClasses :: Connection -> IO ()
 populateClasses conn = do
