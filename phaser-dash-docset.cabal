@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                phaser-dash-docset
-version:             0.0.1.0
+version:             1.0.0.0
 synopsis:            A Dash Docset for Phaser.
 -- description:         
 homepage:            https://github.com/rcolinray/phaser-dash-docset
