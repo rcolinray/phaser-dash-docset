@@ -96,7 +96,9 @@ isClassFile "index.html" = False
 isClassFile "classes.list.html" = False
 isClassFile "namespaces.list.html" = False
 isClassFile "Phaser.html" = False
+isClassFile "PIXI.html" = False
 isClassFile file
+  | ext == ".js" = False
   | ext == ".js.html" = False
   | ext == ".js_.html" = False
   | ext == ".js__.html" = False
@@ -107,6 +109,7 @@ isClassFile file
 populateNamespaces :: Connection -> IO Integer
 populateNamespaces conn = do
   addNamespaceEntry conn "Phaser.html"
+  addNamespaceEntry conn "PIXI.html"
 
 isMembersHeader tag = tag ~== TagText "Members"
 isMethodsHeader tag = tag ~== TagText "Methods"
