@@ -22,9 +22,10 @@ initDocset = shelly $ do
 
   echo "Creating Docset icon"
   cp "icon.png" "Phaser.docset/"
+  cp "icon@2x.png" "Phaser.docset/"
 
   -- Copy existing HTML Documentation
-  exists <- test_d "Phaser.docset/Contents/Resources/Documents" 
+  exists <- test_d "Phaser.docset/Contents/Resources/Documents"
   if not exists
     then do
       echo "Creating Docset documents"
@@ -43,12 +44,12 @@ initDocset = shelly $ do
 addDBEntry conn name token url = run conn ("INSERT OR IGNORE INTO searchIndex(name, type, path) VALUES ('" ++ name ++ "', '" ++ token ++ "', '" ++ url ++ "');") []
 
 addNamespaceEntry :: Connection -> FilePath -> IO Integer
-addNamespaceEntry conn file = 
+addNamespaceEntry conn file =
   addDBEntry conn name "Namespace" file
   where name = dropExtension file
 
 addClassEntry :: Connection -> FilePath -> IO Integer
-addClassEntry conn file = 
+addClassEntry conn file =
   addDBEntry conn name "Class" file
   where name = dropExtension file
 
@@ -68,15 +69,15 @@ initDatabase :: (Connection -> IO ()) -> IO ()
 initDatabase populate = shelly $ do
   -- Create the SQLite index
   echo "Creating database"
-  
+
   conn <- liftIO $ connectSqlite3 "Phaser.docset/Contents/Resources/docSet.dsidx"
 
   liftIO $ do
     handleSql (\_ -> return 0) $ run conn "DROP TABLE searchIndex;" []
     run conn "CREATE TABLE searchIndex(id INTEGER PRIMARY KEY, name TEXT, type TEXT, path TEXT);" []
-  
+
   echo "Populating Docset database"
-  
+
   liftIO $ do
     populate conn
     commit conn
