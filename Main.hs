@@ -113,7 +113,7 @@ populateNamespaces conn = do
 
 isMembersHeader tag = tag ~== TagText "Members"
 isMethodsHeader tag = tag ~== TagText "Methods"
-isDocTag tag = tag ~== TagOpen "h4" [("class", "name")]
+isDocTag tag = tag ~== TagOpen "h4" []
 
 members tags = map (fromAttrib "id") $ filter isDocTag $ takeWhile (not . isMethodsHeader) $ dropWhile (not . isMembersHeader) tags
 methods tags = map (fromAttrib "id") $ filter isDocTag $ dropWhile (not . isMethodsHeader) tags
