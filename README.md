@@ -11,7 +11,7 @@ The current release can index all classes, properties, and methods in the Phaser
 
 ### Get the Docset
 
-Instructions on how to download the Docset can be found [here](http://rcolinray.github.io/phaser-dash-docset).
+The Phaser docset is now hosted through the Dash user contributions. You can download it in Phaser by going to Preferences > Downloads > User Contributed.
 
 ### Build the Docset
 
