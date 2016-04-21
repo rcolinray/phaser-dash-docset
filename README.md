@@ -15,7 +15,7 @@ The Phaser docset is now hosted through the Dash user contributions. You can dow
 
 ### Build the Docset
 
-After downloading the repository, the following commands will build the docset.
+After downloading the repository, the following commands will build and compress the docset.
 
 ```
 git submodule init
@@ -24,5 +24,5 @@ cabal sandbox init
 cabal install --only-dependencies
 cabal configure
 cabal build
-cabal run
+./run.sh
 ```
