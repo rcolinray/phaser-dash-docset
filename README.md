@@ -18,6 +18,6 @@ The Phaser docset is now hosted through the Dash user contributions. You can dow
 After downloading the repository, the following commands will build and compress the docset.
 
 ```
-# ./setup.sh
-# ./run.sh
+> ./setup.sh
+> ./run.sh
 ```
