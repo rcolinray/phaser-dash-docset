@@ -18,11 +18,6 @@ The Phaser docset is now hosted through the Dash user contributions. You can dow
 After downloading the repository, the following commands will build and compress the docset.
 
 ```
-git submodule init
-git submodule update
-cabal sandbox init
-cabal install --only-dependencies
-cabal configure
-cabal build
-./run.sh
+# ./setup.sh
+# ./run.sh
 ```
