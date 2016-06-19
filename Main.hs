@@ -110,6 +110,7 @@ populateNamespaces :: Connection -> IO Integer
 populateNamespaces conn = do
   addNamespaceEntry conn "Phaser.html"
   addNamespaceEntry conn "PIXI.html"
+  addNamespaceEntry conn "Phaser.KeyCode.html"
 
 isMembersHeader tag = tag ~== TagText "Members"
 isMethodsHeader tag = tag ~== TagText "Methods"
