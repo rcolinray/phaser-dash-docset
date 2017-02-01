@@ -1,3 +1,7 @@
+# NOTE: This repository is no longer under active development.
+
+I don't use Phaser anymore and I am not tracking its development.
+
 phaser-dash-docset
 ==================
 
