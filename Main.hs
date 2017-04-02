@@ -62,7 +62,10 @@ addMemberEntry conn file member =
 addMethodEntry :: Connection -> FilePath -> String -> IO Integer
 addMethodEntry conn file member =
   addDBEntry conn name "Method" url
-  where name = (dropExtension file) ++ "." ++ member
+  where name = if member !! 0 == '.'
+                  then fname ++ member
+                  else fname ++ "." ++ member
+        fname = (dropExtension file)
         url = file ++ "#" ++ member
 
 initDatabase :: (Connection -> IO ()) -> IO ()
