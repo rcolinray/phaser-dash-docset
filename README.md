@@ -1,6 +1,6 @@
 # NOTE: This repository is no longer under active development.
 
-I don't use Phaser anymore and I am not tracking its development.
+I don't use Phaser anymore and I am not tracking its development. However, I am willing to build the docset if you submit a pull request with the phaser module updated to the latest version tag.
 
 phaser-dash-docset
 ==================
