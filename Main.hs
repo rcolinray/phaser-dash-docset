@@ -63,8 +63,10 @@ addMethodEntry :: Connection -> FilePath -> String -> IO Integer
 addMethodEntry conn file member =
   addDBEntry conn name "Method" url
   where name = if member !! 0 == '.'
-                  then fname ++ member
-                  else fname ++ "." ++ member
+                   then fname ++ member -- Bug in v2.6.2 docs where some method ids are prefixed with a period
+                   else if member == "numPointsreturn%7Bnumber%7DThetotalnumberofPathPointsinthisPath." -- Bug in v2.6.2 docs where some method ids are malformed
+                       then fname ++ "." ++ "numPoints"
+                       else fname ++ "." ++ member
         fname = (dropExtension file)
         url = file ++ "#" ++ member
 
